@@ -1,0 +1,234 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+#
+# CodeRabbit config for auto-grading workshop Day 2 PRs
+# Place this file in the ROOT of the Excalidraw fork repository.
+
+language: "uk-UA"
+# max 250 chars (CodeRabbit schema)
+tone_instructions: "Ментор Agentic IDE воркшопу. Відповідь українською: добрий тон, але вимогливо. Пропуски пояснюй. Статуси: ✅ ок, ⚠️ частково, ❌ ні."
+
+early_access: false
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: false
+  high_level_summary: true
+  high_level_summary_placeholder: "@coderabbitai summary"
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  changed_files_summary: true
+  sequence_diagrams: false
+
+  auto_review:
+    enabled: true
+    drafts: true
+    auto_incremental_review: true
+    auto_pause_after_reviewed_commits: 0
+    base_branches:
+      - ".*"
+    ignore_title_keywords:
+      - "WIP"
+      - "[skip review]"
+    ignore_usernames:
+      - "dependabot[bot]"
+      - "renovate[bot]"
+      - "github-actions[bot]"
+
+  # ── File filters ──────────────────────────────────────────────
+  path_filters:
+    - ".cursor/**"
+    - ".cursorrules"
+    - "AGENTS.md"
+    - "docs/ab-validation/**"
+    - "docs/ab-validation.md"
+    - "!node_modules/**"
+    - "!dist/**"
+    - "!build/**"
+    - "!coverage/**"
+    - "!*.lock"
+    - "!package-lock.json"
+    - "!yarn.lock"
+    - "!**/*.snap"
+    - "!**/*.min.js"
+    - "!**/*.min.css"
+
+  # ── Path-specific review instructions ─────────────────────────
+  path_instructions:
+    - path: ".cursor/rules/*.mdc"
+      instructions: |
+        Це файл правила Cursor (MDC-формат) — завдання День 2.
+        Перевір:
+        1. Файл має frontmatter з полями: `description`, `globs` (якщо module-scoped)
+        2. Тіло правила конкретне та стосується Excalidraw (не generic "write clean code")
+        3. Є секція "How to verify" — як перевірити, що правило працює
+        4. Правило не суперечить існуючим конвенціям проєкту (React, TypeScript, Yarn)
+        5. Якщо є `globs` — вони конкретні, не `**/*` або занадто широкі
+        Оціни: ✅ конкретне, перевірюване / ⚠️ занадто загальне / ❌ порожнє або безглузде.
+
+    - path: ".cursor/rules/*.md"
+      instructions: |
+        Це файл правила Cursor (Markdown-формат) — завдання День 2.
+        Перевір:
+        1. Правило має чітку назву та опис
+        2. Зміст конкретний та стосується Excalidraw (не generic "use best practices")
+        3. Є секція "How to verify" — як перевірити, що правило працює
+        4. Правило не суперечить існуючим конвенціям проєкту
+        Оціни: ✅ конкретне, перевірюване / ⚠️ занадто загальне / ❌ порожнє або безглузде.
+
+    - path: ".cursor/rules/security*"
+      instructions: |
+        Це правило безпеки (security) — одне з обов'язкових 6+ правил.
+        Перевір:
+        1. Стосується реальних security-аспектів Excalidraw:
+           - XSS prevention (SVG rendering, user input в canvas)
+           - Content Security Policy
+           - Safe handling of imported files (.excalidraw, libraries)
+           - Encryption для collaboration (end-to-end encryption)
+           - Firebase security rules
+        2. Не є generic "sanitize all inputs" без контексту Excalidraw
+        3. Має секцію "How to verify"
+        Якщо правило generic і не стосується Excalidraw — ⚠️.
+
+    - path: ".cursor/commands/*.md"
+      instructions: |
+        Це custom command для Cursor — завдання День 2.
+        Перевір:
+        1. Файл містить чіткий опис, що команда робить
+        2. Інструкції конкретні та корисні для роботи з Excalidraw
+        3. Команда вирішує реальну повторювану задачу (не надумана)
+        4. Приклади використання або очікуваний результат описані
+        Хороші приклади команд: /review-code, /create-component, /add-test,
+        /check-translations, /analyze-bundle, /document-component.
+        Оціни: ✅ корисна / ⚠️ занадто загальна або тривіальна / ❌ порожня.
+
+    - path: "AGENTS.md"
+      instructions: |
+        Це AGENTS.md — обов'язковий файл завдання День 2.
+        Перевір наявність та якість таких секцій:
+        1. Project Overview — суть проєкту Excalidraw (2-5 речень)
+        2. Tech Stack — React, TypeScript, Vite, Yarn workspaces, Vitest
+        3. Project Structure — опис monorepo layout (packages/, excalidraw-app/)
+        4. Key Commands — yarn build, yarn test, yarn start тощо
+        5. Architecture — основні компоненти, state management, rendering
+        6. Conventions — naming, code style, PR workflow
+        7. Do-Not-Touch / Constraints — що не можна змінювати без погодження
+        Мінімум 5 з 7 секцій мають бути присутні та заповнені.
+        Якщо файл < 30 рядків — ⚠️ занадто поверхневий.
+        Якщо файл > 500 рядків — ⚠️ занадто деталізований, краще розбити.
+        Перевір, що факти відповідають реальному Excalidraw (yarn, не npm/pnpm).
+
+    - path: "docs/ab-validation/**"
+      instructions: |
+        Це документ A/B валідації правила — завдання День 2.
+        Перевір:
+        1. Описано, яке правило тестувалось
+        2. Описано тестовий сценарій (промпт або задача для AI)
+        3. Результат A — без правила (або зі старою версією)
+        4. Результат B — з правилом
+        5. Висновок — яка різниця, чи правило працює
+        6. Обидва результати конкретні (не "було погано, стало добре")
+        Якщо немає обох результатів — ❌.
+        Якщо висновок формальний без конкретики — ⚠️.
+
+    - path: "docs/ab-validation.md"
+      instructions: |
+        Це документ A/B валідації правила — завдання День 2.
+        Перевір:
+        1. Описано, яке правило тестувалось
+        2. Описано тестовий сценарій (промпт або задача для AI)
+        3. Результат A — без правила (або зі старою версією)
+        4. Результат B — з правилом
+        5. Висновок — яка різниця, чи правило працює
+        6. Обидва результати конкретні (не "було погано, стало добре")
+        Якщо немає обох результатів — ❌.
+        Якщо висновок формальний без конкретики — ⚠️.
+
+    - path: ".cursor/skills/**"
+      instructions: |
+        Це Agent Skill — бонусне завдання День 2.
+        Перевір:
+        1. Має SKILL.md з описом, коли використовувати
+        2. Інструкції конкретні та корисні для Excalidraw
+        3. Вирішує реальну повторювану задачу
+        Оціни: ✅ корисний / ⚠️ занадто загальний / ❌ порожній.
+
+    - path: ".cursorrules"
+      instructions: |
+        Якщо учасник створив .cursorrules (legacy-формат) — перевір:
+        1. Правила специфічні для Excalidraw (не generic)
+        2. Немає конфліктів з правилами в .cursor/rules/
+        3. Правила допоможуть AI краще працювати з цим проєктом
+        Зверни увагу: .cursorrules — це legacy-формат.
+        Рекомендуй міграцію в .cursor/rules/*.mdc для кращого контролю.
+
+  # ── Pre-merge checks (grading criteria) ───────────────────────
+  pre_merge_checks:
+    title:
+      mode: "warning"
+      requirements: >
+        PR title should follow the format: "Day 2: <participant-name> — Workshop Assignment"
+        or similar descriptive format in Ukrainian or English.
+
+    description:
+      mode: "warning"
+
+    custom_checks:
+      - mode: "warning"
+        name: "Minimum 6 rules"
+        instructions: >
+          Check that the PR includes at least 6 rule files in `.cursor/rules/` directory.
+          Files can have `.mdc` or `.md` extension.
+          Each rule file must contain:
+          1. A clear description of the rule (not empty or placeholder text)
+          2. A "How to verify" section explaining how to test that the rule works
+          Rules should be specific to Excalidraw project (not generic "write clean code").
+          At least one rule should be security-related.
+          At least one rule should use `globs` for module-scoping.
+          PASS if 6+ rule files exist, each with substantive content and "How to verify".
+          FAIL if fewer than 6 rules, or rules lack "How to verify", or rules are empty.
+
+      - mode: "warning"
+        name: "Minimum 2 custom commands"
+        instructions: >
+          Check that the PR includes at least 2 custom command files
+          in `.cursor/commands/` directory (`.md` files).
+          Each command must contain clear instructions for a repeatable task
+          relevant to Excalidraw development (e.g., code review, component creation,
+          test writing, translation checking, bundle analysis).
+          PASS if 2+ command files exist with substantive content.
+          FAIL if fewer than 2 commands or commands are empty/placeholder.
+
+      - mode: "warning"
+        name: "A/B validation document"
+        instructions: >
+          Check that the PR includes at least one A/B validation document.
+          Look in `docs/ab-validation/` directory or `docs/ab-validation.md` file.
+          The document must contain ALL of these:
+          1. Which rule was tested
+          2. Test scenario (the prompt or task given to AI)
+          3. Result A — output without the rule (or with old version)
+          4. Result B — output with the rule applied
+          5. Conclusion — what difference the rule made
+          PASS if document exists with all 5 elements present.
+          FAIL if document is missing, or lacks both test results, or has no conclusion.
+
+      - mode: "warning"
+        name: "AGENTS.md complete"
+        instructions: >
+          Check that the PR includes an AGENTS.md file in the repository root.
+          The file must contain at least 5 of these 7 sections:
+          1. Project Overview
+          2. Tech Stack
+          3. Project Structure
+          4. Key Commands
+          5. Architecture
+          6. Conventions
+          7. Do-Not-Touch / Constraints
+          Each section must have substantive content (not just empty headers).
+          File should be at least 30 lines long.
+          PASS if AGENTS.md exists with 5+ filled sections and 30+ lines.
+          FAIL if file is missing, has fewer than 5 sections, or sections are empty.
+
+chat:
+  auto_reply: true
