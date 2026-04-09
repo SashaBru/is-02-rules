@@ -47,3 +47,12 @@ No exceptions — every step must pass clean.
 - Zero warnings allowed (`--max-warnings=0`).
 - Fix lint issues at the source — do not use `eslint-disable` comments without a documented reason.
 - Pre-commit hooks (`husky` + `lint-staged`) enforce lint and format on staged files automatically.
+
+## How to verify
+
+- `yarn test:all` — must exit clean (zero errors, zero warnings) before any PR.
+- `yarn test:typecheck` — confirms TypeScript is satisfied across all packages after type-related changes.
+- `yarn test:code` — confirms ESLint passes with `--max-warnings=0`; if it fails, run `yarn fix:code` then re-check.
+- `yarn test:other` — confirms Prettier; if it fails, run `yarn fix:other` then re-check.
+- `yarn test:app --watch=false` — runs the full Vitest suite once; watch for snapshot diffs after render changes.
+- After updating snapshots (`yarn test:update`): review `git diff __snapshots__/` and confirm every changed snapshot is intentional before staging.
