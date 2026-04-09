@@ -1,0 +1,48 @@
+---
+description: "Rules for working with collaboration, Firebase, and data sync"
+globs: "excalidraw-app/**,firebase-project/**"
+alwaysApply: false
+---
+# Collaboration & Firebase Rules
+
+## Scope
+
+Collaboration and Firebase code lives exclusively in `excalidraw-app/` — it must NOT be moved into published packages (`packages/*`). The core `@excalidraw/excalidraw` package must remain usable without any Firebase dependency.
+
+## Real-time Sync
+
+- Collaboration uses **Socket.io** for real-time element sync.
+- Conflict resolution uses `reconcileElements()` from `packages/excalidraw/data/reconcile.ts` — do NOT write custom merge logic.
+- Collaboration state (collaborators map, pointers) is part of `AppState` — update it through the standard state path, not directly.
+
+## Encryption
+
+- All data sent to the server is **end-to-end encrypted** — encryption/decryption happens client-side before any network call.
+- Do NOT log, expose, or transmit decrypted element data outside the client.
+- Encryption utilities are in `excalidraw-app/data/` — treat them as security-critical code.
+
+## Firebase Security Rules
+
+- Firestore and Storage rules live in `firebase-project/firestore.rules` and `firebase-project/storage.rules`.
+- Changes to security rules require careful review — overly permissive rules expose user data.
+- Test rule changes against Firebase emulator before deploying.
+- Never deploy rule changes directly to production without review.
+
+## Data Persistence Hierarchy
+
+```
+Local (IndexedDB / localStorage)   ← primary, always available
+         ↓
+Firebase Firestore/Storage         ← collaboration & sharing only
+```
+
+- Always write to local storage first.
+- Firebase writes are best-effort for collaboration; local state is authoritative for the current session.
+- Do NOT block the UI on Firebase operations.
+
+## How to verify
+
+- Test collaboration locally by opening two browser tabs and verifying real-time sync.
+- Verify encryption: confirm no plaintext element data appears in Firestore documents or network payloads (use browser DevTools → Network tab).
+- Firebase rules changes: run `firebase emulators:start` and test read/write scenarios before deploying.
+- `yarn test:all` — must pass; collaboration unit tests live in `excalidraw-app/__tests__/`.

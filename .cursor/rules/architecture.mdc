@@ -1,0 +1,36 @@
+---
+description: "Architecture constraints for the Excalidraw project"
+globs: "packages/**"
+alwaysApply: false
+---
+# Project Architecture
+
+## State Management
+
+- Editor state is managed via **ActionManager** — NOT Redux, Zustand, MobX, or any other state library.
+- Execute state changes with `actionManager.executeAction(...)` — there is no `dispatch()` method.
+- `ActionManager` is defined in `packages/excalidraw/actions/manager.tsx`.
+- Global UI state type is `AppState` (`packages/excalidraw/appState.ts`).
+- Component-level UI state uses **Jotai atoms** in two isolated layers:
+  - Core package: `packages/excalidraw/editor-jotai.ts` — isolated editor store via `jotai-scope`; 39+ files import from it.
+  - App shell: `excalidraw-app/app-jotai.ts` — separate app-level store, also isolated.
+  - The two stores must remain isolated — do NOT import atoms across the boundary. When adding new atoms, import from the correct layer's jotai file (`editor-jotai.ts` or `app-jotai.ts`), never directly from `'jotai'`.
+
+## Rendering
+
+- All drawing is done on a **Canvas 2D** context — NOT React DOM, not SVG for interactive rendering.
+- Render pipeline: `Scene` → `renderScene()` → canvas context (`packages/excalidraw/scene/Renderer.ts`).
+- DO NOT introduce react-konva, fabric.js, pixi.js, or any other canvas/WebGL framework.
+
+## Dependencies
+
+- No new npm packages without explicit approval.
+- Prefer utilities already in `@excalidraw/common` or `@excalidraw/math` before adding external deps.
+- Heavy dependencies (locales, Mermaid, image processing) must be **dynamically imported** — never statically bundled.
+
+## How to verify
+
+- `yarn test:all` — full gate (typecheck, ESLint, Prettier, Vitest).
+- `yarn start` — smoke-test the editor: drawing, undo/redo, export; confirm canvas-based rendering (not DOM-rendered scene).
+- Search for forbidden stacks: no new `redux` / `zustand` / `mobx` / `react-konva` / `fabric` / `pixi` imports in `packages/*` unless explicitly approved.
+- Confirm action API: `ActionManager` exposes `executeAction` — confirm no `actionManager.dispatch` exists (`rg 'actionManager\.dispatch' packages/excalidraw` should be empty).

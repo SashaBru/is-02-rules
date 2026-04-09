@@ -1,0 +1,42 @@
+---
+description: "Conventions for working with Excalidraw elements and Scene mutations"
+globs: "packages/excalidraw/**,packages/element/**"
+alwaysApply: false
+---
+# Element Model Conventions
+
+## Core Types
+
+- All shapes extend `ExcalidrawElement` (defined in `packages/excalidraw/types.ts`).
+- Specializations: `ExcalidrawLinearElement` (arrows, lines), `ExcalidrawTextElement`, `ExcalidrawImageElement`, etc.
+- Every element has: `id` (nanoid string), `version` (incremented on each mutation), `seed` (Rough.js determinism), `versionNonce`.
+
+## Mutating Elements
+
+- NEVER mutate element objects directly — always use `scene.mutateElement(element, updates)`.
+- Direct property assignment (`element.x = 10`) bypasses version tracking and breaks undo history.
+- For bulk mutations, collect updates and apply them in a single `mutateElement` call.
+
+## Accessing Elements
+
+- Read elements from the scene via `scene.getNonDeletedElementsMap()` or `scene.getNonDeletedElements()`.
+- Do NOT hold stale references to element objects across async boundaries — re-read from the scene.
+- Deleted elements remain in the array with `isDeleted: true`; filter them out unless you specifically need history.
+
+## Bindings and Arrows
+
+- Arrow-to-element binding is managed by the binding system in `packages/element/src/binding.ts`.
+- Do NOT directly set `startBinding` / `endBinding` on linear elements — use the binding API.
+- When moving bound elements, update arrow bindings via `updateBoundElements(...)`.
+
+## IDs and Ordering
+
+- Generate element IDs with `nanoid()` from `packages/common`.
+- Element z-order is determined by array position — first element is bottom, last is top.
+- Fractional indexing (`packages/excalidraw/fractionalIndex.ts`) is used for ordering in collaboration.
+
+## How to verify
+
+- `yarn test:typecheck` — ensures element type contracts are satisfied.
+- `yarn test` — run unit tests including element mutation tests in `packages/excalidraw/__tests__/`.
+- Manually smoke-test: create, move, group, and delete shapes; confirm undo/redo works correctly after any element-layer change.

@@ -1,0 +1,60 @@
+---
+description: "Monorepo package boundaries and build dependency rules"
+globs: "packages/**"
+alwaysApply: false
+---
+# Monorepo Package Boundaries
+
+## Package Dependency Order
+
+Packages form a strict DAG — lower packages must NOT import from higher ones:
+
+```
+@excalidraw/common        ← no internal deps
+       ↓
+@excalidraw/math          ← may import common
+       ↓
+@excalidraw/element       ← may import common, math
+       ↓
+@excalidraw/excalidraw    ← may import common, math, element
+       ↓
+excalidraw-app            ← may import all packages (not published)
+```
+
+- `@excalidraw/common` must remain free of internal cross-package imports.
+- `@excalidraw/math` must not import from `element` or `excalidraw`.
+- `@excalidraw/element` must not import from `excalidraw` or `excalidraw-app`.
+- Circular dependencies between packages are **forbidden**.
+
+## Build Order
+
+Packages must be built in dependency order:
+
+```bash
+yarn build:packages   # builds: common → math → element → excalidraw
+```
+
+Do not run builds out of order — downstream packages link against the compiled output of their deps.
+
+## Package Responsibilities
+
+| Package | Responsibility |
+|---------|---------------|
+| `@excalidraw/common` | Constants, pure utilities, shared colors |
+| `@excalidraw/math` | 2D vector/matrix/angle primitives (no DOM, no React) |
+| `@excalidraw/element` | Element types, geometry, binding, hit testing |
+| `@excalidraw/excalidraw` | React component, canvas rendering, actions, state |
+| `excalidraw-app` | Deployed web app (PWA, Firebase, collaboration) |
+
+## Rules
+
+- Math utilities belong in `@excalidraw/math` — not duplicated in other packages.
+- Element geometry (bounding boxes, hit testing) belongs in `@excalidraw/element`.
+- React components and UI belong in `@excalidraw/excalidraw` or `excalidraw-app`.
+- Do NOT import `excalidraw-app` code from any published package.
+
+## How to verify
+
+- `yarn test:typecheck` — TypeScript will catch cross-boundary import errors via `tsconfig.json` path aliases.
+- `yarn build:packages` — must succeed without errors for all packages in order.
+- Check for circular deps: `rg 'from.*@excalidraw/excalidraw' packages/element` should be empty.

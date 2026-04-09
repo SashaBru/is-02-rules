@@ -1,0 +1,25 @@
+---
+description: "Protected files that should not be modified without explicit approval"
+alwaysApply: true
+---
+# Protected Files
+
+NEVER modify these files without explicit approval:
+
+- `packages/excalidraw/scene/Renderer.ts` — canvas render pipeline; changes break all drawing output
+- `packages/excalidraw/data/restore.ts` — file format compatibility and migration; changes risk breaking import of existing `.excalidraw` files
+- `packages/excalidraw/actions/manager.tsx` — action dispatch system; changes affect all editor operations
+- `packages/excalidraw/types.ts` — core type definitions shared across packages; changes cascade broadly
+
+Changes to protected files require:
+1. Full understanding of all downstream dependencies
+2. Running the complete test suite (`yarn test:all`)
+3. Manual QA verification of affected paths
+
+## How to verify
+
+- `yarn test:all` — must pass before any change to the listed paths.
+- After edits to `Renderer.ts`: run `yarn start` and manually smoke-test canvas rendering, selection, zoom, and export.
+- After edits to `restore.ts`: import/export `.excalidraw` files and library JSON; confirm round-trip and backward compatibility with older file versions.
+- After edits to `manager.tsx`: exercise menus, keyboard shortcuts, and actions that flow through `ActionManager` (e.g., load/save, theme, zoom, undo/redo).
+- After edits to `types.ts`: run `yarn test:typecheck` and verify no type errors across all packages.

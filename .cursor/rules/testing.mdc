@@ -1,0 +1,49 @@
+---
+description: "Testing requirements and conventions"
+alwaysApply: true
+---
+# Testing Requirements
+
+## Gate: All Tests Must Pass
+
+Run the full suite before merging any change:
+
+```bash
+yarn test:all   # typecheck → ESLint (max-warnings=0) → Prettier → Vitest
+```
+
+No exceptions — every step must pass clean.
+
+## Individual Commands
+
+| Command | What it checks |
+|---------|---------------|
+| `yarn test:typecheck` | TypeScript strict-mode across all packages |
+| `yarn test:code` | ESLint with zero warnings allowed |
+| `yarn test:other` | Prettier formatting |
+| `yarn test` | Vitest unit/component tests (watch mode) |
+| `yarn test:coverage` | Coverage report |
+
+## What to Test
+
+- **Element mutations** — any change to element creation, mutation, or deletion requires a test in `packages/excalidraw/__tests__/`.
+- **Export/import** — changes to serialization or restore logic require round-trip tests.
+- **Actions** — new or modified actions require tests that verify state transitions.
+- **Math utilities** — all functions in `@excalidraw/math` must have unit tests.
+
+## Snapshot Tests
+
+- Test snapshots live in `__snapshots__/` directories.
+- Update snapshots intentionally with `yarn test -u` — review the diff carefully before committing.
+- Never commit snapshot updates you did not explicitly verify.
+
+## Canvas Mocking
+
+- Tests use `vitest-canvas-mock` to mock the Canvas 2D API.
+- Do NOT add real DOM painting assertions — mock the canvas and assert on state/element properties instead.
+
+## ESLint Policy
+
+- Zero warnings allowed (`--max-warnings=0`).
+- Fix lint issues at the source — do not use `eslint-disable` comments without a documented reason.
+- Pre-commit hooks (`husky` + `lint-staged`) enforce lint and format on staged files automatically.
